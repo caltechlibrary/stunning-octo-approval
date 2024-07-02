@@ -11,7 +11,7 @@ body:
   - type: checkboxes
     id: approval
     attributes:
-      label: Manual Approval
+      label: Manual Approval Required
       description: Manual approval of validation results will be required to execute the workflow.
       options:
         - label: I will monitor this issue and respond to the validation results.

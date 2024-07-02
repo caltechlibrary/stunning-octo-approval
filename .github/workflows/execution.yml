@@ -1,0 +1,66 @@
+name: Preservation Issue Comment Parser
+
+on:
+  issue_comment:
+    types: created
+
+jobs:
+  execute:
+    runs-on: ubuntu-latest
+    if: ${{ !github.event.issue.pull_request && contains(github.event.issue.labels.*.name, 'preservation') && github.event.issue.assignee.name == github.event.comment.user.name }}
+    outputs:
+      success: ${{ steps.success.outputs.success }}
+    steps:
+      # TODO check for multiple open issues with 'attention' or 'failure' label
+      # fail the job in those cases because of potential file system cruft
+
+      - uses: actions/checkout@v4
+
+      - id: script
+        # read the body of the comment for substring "ok"
+        if: contains(github.event.comment.body, 'ok')
+        run: |
+          echo "run execution" &>> ${RUNNER_TEMP}/execution.log
+          echo "python ${HOME}/${GITHUB_REPOSITORY}/s3.py &>> ${RUNNER_TEMP}/execution.log" &>> ${RUNNER_TEMP}/execution.log
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: exit
+        # read the body of the comment for anything other than substring "ok"
+        if: ${{ !contains(github.event.comment.body, 'ok') }}
+        run: |
+          gh issue edit ${{ github.event.issue.number }} \
+            --remove-label "attention" \
+            --add-label "canceled" \
+            --title "Canceled Preservation Workflow" \
+            --remove-assignee ${{ github.actor }}
+          gh issue close ${{ github.event.issue.number }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: success
+        if: always() && steps.script.outcome == 'success'
+        run: |
+          gh issue edit ${{ github.event.issue.number }} \
+            --remove-label "attention" \
+            --title "Executed Preservation Workflow"
+          LOG=$(cat "${RUNNER_TEMP}/execution.log")
+          CODEBLOCK_FENCE='```'
+          CODEBLOCK=$(echo -e "$CODEBLOCK_FENCE\n$LOG\n$CODEBLOCK_FENCE")
+          gh issue close ${{ github.event.issue.number }} --comment "$CODEBLOCK"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: failure
+        if: always() && steps.script.outcome != 'success'
+        run: |
+          gh issue edit ${{ github.event.issue.number }} \
+            --add-label "failure" \
+            --title "Failed Execution for Preservation Workflow"
+          LOG=$(cat "${RUNNER_TEMP}/validate.log")
+          CODEBLOCK_FENCE='```'
+          CODEBLOCK=$(echo -e "$CODEBLOCK_FENCE\n$LOG\n$CODEBLOCK_FENCE")
+          gh issue comment ${{ github.event.issue.number }} --body "$CODEBLOCK"
+          gh issue edit ${{ github.event.issue.number }} --add-assignee ${{ vars.DEVELOPER }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

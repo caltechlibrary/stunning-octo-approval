@@ -27,13 +27,14 @@ jobs:
         if: always() && steps.script.outcome == 'success'
         run: |
           gh issue edit ${{ github.event.issue.number }} \
-            --add-assignee ${{ github.actor }} \
             --add-label "attention" \
             --title "Review Validation for Preservation Workflow"
           LOG=$(cat "${RUNNER_TEMP}/validation.log")
           CODEBLOCK_FENCE='```'
           CODEBLOCK=$(echo -e "$CODEBLOCK_FENCE\n$LOG\n$CODEBLOCK_FENCE")
-          gh issue comment ${{ github.event.issue.number }} --body "$CODEBLOCK"
+          COMMENT_BODY=$(echo -e "$CODEBLOCK\nReply with a new comment containing the text *OK* to approve the validation results and continue the workflow execution.")
+          gh issue comment ${{ github.event.issue.number }} --body "$COMMENT_BODY"
+          gh issue edit ${{ github.event.issue.number }} --add-assignee ${{ github.actor }}
           echo "success=true" >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -42,12 +43,12 @@ jobs:
         if: always() && steps.script.outcome != 'success'
         run: |
           gh issue edit ${{ github.event.issue.number }} \
-            --add-assignee ${{ vars.DEVELOPER }} \
             --add-label "failure" \
             --title "Failed Validation for Preservation Workflow"
           LOG=$(cat "${RUNNER_TEMP}/validate.log")
           CODEBLOCK_FENCE='```'
           CODEBLOCK=$(echo -e "$CODEBLOCK_FENCE\n$LOG\n$CODEBLOCK_FENCE")
           gh issue comment ${{ github.event.issue.number }} --body "$CODEBLOCK"
+          gh issue edit ${{ github.event.issue.number }} --add-assignee ${{ vars.DEVELOPER }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
