@@ -6,3 +6,11 @@ body:
   - type: markdown
     attributes:
       value: Manual approval of validation results is required to execute the workflow.
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      description: The metadata records and digital files must exist prior to beginning this workflow.
+      options:
+        - label: I have verified the existence of the records and files.
+          required: true
