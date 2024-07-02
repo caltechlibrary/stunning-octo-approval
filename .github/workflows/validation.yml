@@ -17,9 +17,9 @@ jobs:
       # fail the job in those cases because of potential file system cruft
       - id: issues
         run: |
-          echo $(gh issue list)
-          echo $(gh issue list --label 'attention')
-          echo $(gh issue list --label 'failure')
+          echo $(gh issue list --json url)
+          echo $(gh issue list --label 'attention' --json url)
+          echo $(gh issue list --label 'failure' --json url)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
