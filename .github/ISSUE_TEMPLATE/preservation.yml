@@ -1,16 +1,18 @@
 name: Preservation Operations
-description: Initiate preservation operations.
+description: Initiate preservation workflow.
 title: "Validating Records & Files for Preservation"
 labels: ["preservation"]
 body:
   - type: markdown
     attributes:
-      value: Manual approval of validation results is required to execute the workflow.
+      value: |
+        > [!IMPORTANT]
+        > The metadata records and digital files must exist prior to beginning this workflow.
   - type: checkboxes
-    id: prerequisites
+    id: approval
     attributes:
-      label: Prerequisites
-      description: The metadata records and digital files must exist prior to beginning this workflow.
+      label: Manual Approval
+      description: Manual approval of validation results will be required to execute the workflow.
       options:
-        - label: I have verified the existence of the records and files.
+        - label: I will monitor this issue and respond to the validation results.
           required: true
