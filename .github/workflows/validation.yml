@@ -11,6 +11,8 @@ jobs:
     outputs:
       success: ${{ steps.success.outputs.success }}
     steps:
+      - uses: actions/checkout@v4
+
       # TODO check for open issues with 'attention' or 'failure' label
       # fail the job in those cases because of potential file system cruft
       - id: issues
@@ -20,8 +22,6 @@ jobs:
           echo $(gh issue list --label 'failure')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: actions/checkout@v4
 
       - id: script
         run: |
