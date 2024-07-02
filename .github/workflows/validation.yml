@@ -13,6 +13,13 @@ jobs:
     steps:
       # TODO check for open issues with 'attention' or 'failure' label
       # fail the job in those cases because of potential file system cruft
+      - id: issues
+        run: |
+          echo $(gh issue list)
+          echo $(gh issue list --label 'attention')
+          echo $(gh issue list --label 'failure')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/checkout@v4
 
@@ -32,7 +39,7 @@ jobs:
           LOG=$(cat "${RUNNER_TEMP}/validation.log")
           CODEBLOCK_FENCE='```'
           CODEBLOCK=$(echo -e "$CODEBLOCK_FENCE\n$LOG\n$CODEBLOCK_FENCE")
-          COMMENT_BODY=$(echo -e "$CODEBLOCK\nReply with a new comment containing the text *OK* to approve the validation results and continue the workflow execution.")
+          COMMENT_BODY=$(echo -e "$CODEBLOCK\nReply with a new comment containing the text **OK** to approve the validation results and continue the workflow execution.")
           gh issue comment ${{ github.event.issue.number }} --body "$COMMENT_BODY"
           gh issue edit ${{ github.event.issue.number }} --add-assignee ${{ github.actor }}
           echo "success=true" >> $GITHUB_OUTPUT
