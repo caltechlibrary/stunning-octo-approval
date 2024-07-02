@@ -19,7 +19,13 @@ jobs:
         run: |
           echo $(gh issue list --json url --jq length)
           echo $(gh issue list --label 'attention' --json url --jq length)
+          if [ "$(gh issue list --label 'attention' --json url --jq length)" -gt 0 ]; then
+            echo "open attention issue"
+          fi
           echo $(gh issue list --label 'failure' --json url --jq length)
+          if [ "$(gh issue list --label 'failure' --json url --jq length)" -gt 0 ]; then
+            echo "open failure issue"
+          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
