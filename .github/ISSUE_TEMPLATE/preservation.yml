@@ -1,0 +1,8 @@
+name: Preservation Operations
+description: Initiate preservation operations.
+title: "Validating Records & Files for Preservation"
+labels: ["preservation"]
+body:
+  - type: markdown
+    attributes:
+      value: Manual approval of validation results is required to execute the workflow.
