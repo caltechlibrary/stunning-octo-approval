@@ -1,0 +1,53 @@
+name: Preservation Issue Parser
+
+on:
+  issues:
+    types: opened
+
+jobs:
+  validate:
+    runs-on: self-hosted
+    if: !github.event.issue.pull_request && contains(github.event.issue.labels.*.name, 'preservation')
+    outputs:
+      success: ${{ steps.success.outputs.success }}
+    steps:
+      # TODO check for open issues with 'attention' or 'failure' label
+      # fail the job in those cases because of potential file system cruft
+
+      - uses: actions/checkout@v4
+
+      - id: script
+        run: |
+          echo "run validation" &>> ${RUNNER_TEMP}/validation.log
+          echo "python ${HOME}/${GITHUB_REPOSITORY}/s3.py &>> ${RUNNER_TEMP}/validation.log" &>> ${RUNNER_TEMP}/validation.log
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: success
+        if: always() && steps.script.outcome == 'success'
+        run: |
+          gh issue edit ${{ github.event.issue.number }} \
+            --add-assignee ${{ github.actor }} \
+            --add-label "attention" \
+            --title "Review Validation for Preservation Workflow"
+          LOG=$(cat "${RUNNER_TEMP}/validation.log")
+          CODEBLOCK_FENCE='```'
+          CODEBLOCK=$(echo -e "$CODEBLOCK_FENCE\n$LOG\n$CODEBLOCK_FENCE")
+          gh issue comment ${{ github.event.issue.number }} --body "$CODEBLOCK"
+          echo "success=true" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: failure
+        if: always() && steps.script.outcome != 'success'
+        run: |
+          gh issue edit ${{ github.event.issue.number }} \
+            --add-assignee ${{ vars.DEVELOPER }} \
+            --add-label "failure" \
+            --title "Failed Validation for Preservation Workflow"
+          LOG=$(cat "${RUNNER_TEMP}/validate.log")
+          CODEBLOCK_FENCE='```'
+          CODEBLOCK=$(echo -e "$CODEBLOCK_FENCE\n$LOG\n$CODEBLOCK_FENCE")
+          gh issue comment ${{ github.event.issue.number }} --body "$CODEBLOCK"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
