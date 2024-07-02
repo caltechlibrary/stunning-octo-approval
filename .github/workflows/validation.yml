@@ -7,7 +7,7 @@ on:
 jobs:
   validate:
     runs-on: self-hosted
-    if: !github.event.issue.pull_request && contains(github.event.issue.labels.*.name, 'preservation')
+    if: ${{ !github.event.issue.pull_request && contains(github.event.issue.labels.*.name, 'preservation') }}
     outputs:
       success: ${{ steps.success.outputs.success }}
     steps:
