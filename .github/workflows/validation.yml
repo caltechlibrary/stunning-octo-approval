@@ -14,7 +14,6 @@ jobs:
       - name: Check for blocking issues
         run: |
           blockers="$(gh issue list --search "label:attention,failure" --json number --jq '"- #\(.[].number)"')"
-          echo -e "here is maybe a formatted list:\n\n${blockers}"
           if [ -n "$blockers" ]; then
             gh issue edit ${{ github.event.issue.number }} \
               --add-label "failure" \
