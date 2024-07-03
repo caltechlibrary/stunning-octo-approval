@@ -12,9 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ !github.event.issue.pull_request && contains(github.event.issue.labels.*.name, 'preservation') && github.event.issue.assignee.name == github.event.comment.user.name }}
     steps:
-      # TODO check for multiple open issues with 'attention' or 'failure' label
-      # fail the job in those cases because of potential file system cruft
-
       - uses: actions/checkout@v4
 
       - name: Check for blocking issues
@@ -33,14 +30,14 @@ jobs:
 
       - name: Run execution code
         id: script
-        # read the body of the comment for substring "ok"
+        # read the body of the comment for the substring "ok"
         if: contains(github.event.comment.body, 'ok')
         run: |
           echo "run execution" &>> ${RUNNER_TEMP}/execution.log
           echo "python ${HOME}/${GITHUB_REPOSITORY}/s3.py &>> ${RUNNER_TEMP}/execution.log" &>> ${RUNNER_TEMP}/execution.log
 
       - name: Close issue with canceled label
-        # read the body of the comment for anything other than substring "ok"
+        # read the body of the comment for text without the substring "ok"
         if: ${{ !contains(github.event.comment.body, 'ok') }}
         run: |
           gh issue edit ${{ github.event.issue.number }} \
@@ -71,4 +68,6 @@ jobs:
           CODEBLOCK_FENCE='```'
           CODEBLOCK=$(echo -e "$CODEBLOCK_FENCE\n$LOG\n$CODEBLOCK_FENCE")
           gh issue comment ${{ github.event.issue.number }} --body "$CODEBLOCK"
-          gh issue edit ${{ github.event.issue.number }} --add-assignee ${{ vars.DEVELOPER }}
+          if [ -n ${{ vars.DEVELOPER }}]; then
+            gh issue edit ${{ github.event.issue.number }} --add-assignee ${{ vars.DEVELOPER }}
+          fi

@@ -56,4 +56,6 @@ jobs:
           CODEBLOCK_FENCE='```'
           CODEBLOCK=$(echo -e "$CODEBLOCK_FENCE\n$LOG\n$CODEBLOCK_FENCE")
           gh issue comment ${{ github.event.issue.number }} --body "$CODEBLOCK"
-          gh issue edit ${{ github.event.issue.number }} --add-assignee ${{ vars.DEVELOPER }}
+          if [ -n ${{ vars.DEVELOPER }}]; then
+            gh issue edit ${{ github.event.issue.number }} --add-assignee ${{ vars.DEVELOPER }}
+          fi
