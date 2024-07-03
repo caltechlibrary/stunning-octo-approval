@@ -40,7 +40,7 @@ jobs:
           #   gh issue edit ${{ github.event.issue.number }} --add-assignee ${{ github.actor }}
           #   exit "$msg"
           # fi
-          blocking_issues="$(gh issue list --label 'attention' --json number)"
+          blocking_issues="$(gh issue list --search "label:attention,failure" --json number)"
           echo "blocking issues: $blocking_issues"
           no_issues="$(gh issue list --label 'bug' --json number)"
           echo "no issues: $no_issues"
