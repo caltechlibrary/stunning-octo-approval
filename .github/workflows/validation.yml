@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - id: issues
+      - name: Check open issues
         run: |
           # msg=''
           # attention_count="$(gh issue list --label 'attention' --json url --jq length)"
@@ -60,14 +60,15 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - id: script
+      - name: Run validation code
+        id: script
         run: |
           echo "run validation" &>> ${RUNNER_TEMP}/validation.log
           echo "python ${HOME}/${GITHUB_REPOSITORY}/s3.py &>> ${RUNNER_TEMP}/validation.log" &>> ${RUNNER_TEMP}/validation.log
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - id: success
+      - name: Comment with success output
         if: always() && steps.script.outcome == 'success'
         run: |
           gh issue edit ${{ github.event.issue.number }} \
@@ -82,8 +83,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - id: failure
-        if: always() && steps.script.outcome != 'success'
+      - name: Comment with failure output
+        if: always() && steps.script.outcome != 'success' && steps.script.outcome != 'skipped'
         run: |
           gh issue edit ${{ github.event.issue.number }} \
             --add-label "failure" \
