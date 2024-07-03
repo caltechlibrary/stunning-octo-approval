@@ -43,7 +43,16 @@ jobs:
           blocking_issues="$(gh issue list --search "label:attention,failure" --json number)"
           echo "blocking issues: $blocking_issues"
           formatted_blocking_issues="$(gh issue list --search "label:attention,failure" --json number --jq '"- #\(.[].number)"')"
-          echo -e "here is maybe a formatted list:\n${formatted_blocking_issues}"
+          echo -e "here is maybe a formatted list:\n\n${formatted_blocking_issues}"
+          if [ -z "$formatted_blocking_issues" ]; then
+            gh issue edit ${{ github.event.issue.number }} \
+              --add-label "failure" \
+              --title "Open Issues Blocking Preservation Workflow"
+            COMMENT_BODY=$(echo -e "The following issues must be closed before the preservation workflow can run:\n\n${formatted_blocking_issues}")
+            gh issue comment ${{ github.event.issue.number }} --body "$COMMENT_BODY"
+            gh issue edit ${{ github.event.issue.number }} --add-assignee ${{ github.actor }}
+            exit 1
+          fi
           no_issues="$(gh issue list --label 'bug' --json number)"
           echo "no issues: $no_issues"
           formatted_no_issues="$(gh issue list --label 'bug' --json number --jq '"- #\(.[].number)"')"
