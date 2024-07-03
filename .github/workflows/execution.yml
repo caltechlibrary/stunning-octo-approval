@@ -4,6 +4,9 @@ on:
   issue_comment:
     types: created
 
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
   execute:
     runs-on: ubuntu-latest
@@ -16,6 +19,7 @@ jobs:
 
       - name: Check for blocking issues
         run: |
+          # exclude the current open 'attention' issue from the list of blockers
           blockers="$(gh issue list --search "label:attention,failure" --json number --jq 'del(.[] | select(.number == ${{ github.event.issue.number }})) | "- #\(.[].number)"')"
           if [ -n "$blockers" ]; then
             gh issue edit ${{ github.event.issue.number }} \
@@ -26,8 +30,6 @@ jobs:
             gh issue edit ${{ github.event.issue.number }} --add-assignee ${{ github.actor }}
             exit 1
           fi
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run execution code
         id: script
@@ -36,8 +38,6 @@ jobs:
         run: |
           echo "run execution" &>> ${RUNNER_TEMP}/execution.log
           echo "python ${HOME}/${GITHUB_REPOSITORY}/s3.py &>> ${RUNNER_TEMP}/execution.log" &>> ${RUNNER_TEMP}/execution.log
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Close issue with canceled label
         # read the body of the comment for anything other than substring "ok"
@@ -49,8 +49,6 @@ jobs:
             --title "Canceled Preservation Workflow" \
             --remove-assignee ${{ github.actor }}
           gh issue close ${{ github.event.issue.number }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Comment with success output
         if: always() && steps.script.outcome == 'success'
@@ -62,8 +60,6 @@ jobs:
           CODEBLOCK_FENCE='```'
           CODEBLOCK=$(echo -e "$CODEBLOCK_FENCE\n$LOG\n$CODEBLOCK_FENCE")
           gh issue close ${{ github.event.issue.number }} --comment "$CODEBLOCK"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Comment with failure output
         if: always() && steps.script.outcome != 'success' && steps.script.outcome != 'skipped'
@@ -76,5 +72,3 @@ jobs:
           CODEBLOCK=$(echo -e "$CODEBLOCK_FENCE\n$LOG\n$CODEBLOCK_FENCE")
           gh issue comment ${{ github.event.issue.number }} --body "$CODEBLOCK"
           gh issue edit ${{ github.event.issue.number }} --add-assignee ${{ vars.DEVELOPER }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

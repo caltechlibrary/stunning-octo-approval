@@ -4,6 +4,9 @@ on:
   issues:
     types: opened
 
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -23,16 +26,12 @@ jobs:
             gh issue edit ${{ github.event.issue.number }} --add-assignee ${{ github.actor }}
             exit 1
           fi
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run validation code
         id: script
         run: |
           echo "run validation" &>> ${RUNNER_TEMP}/validation.log
           echo "python ${HOME}/${GITHUB_REPOSITORY}/s3.py &>> ${RUNNER_TEMP}/validation.log" &>> ${RUNNER_TEMP}/validation.log
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Comment with success output
         if: always() && steps.script.outcome == 'success'
@@ -46,8 +45,6 @@ jobs:
           COMMENT_BODY=$(echo -e "$CODEBLOCK\nReply with a new comment containing the text **OK** to approve the validation results and continue the workflow execution.")
           gh issue comment ${{ github.event.issue.number }} --body "$COMMENT_BODY"
           gh issue edit ${{ github.event.issue.number }} --add-assignee ${{ github.actor }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Comment with failure output
         if: always() && steps.script.outcome != 'success' && steps.script.outcome != 'skipped'
@@ -60,5 +57,3 @@ jobs:
           CODEBLOCK=$(echo -e "$CODEBLOCK_FENCE\n$LOG\n$CODEBLOCK_FENCE")
           gh issue comment ${{ github.event.issue.number }} --body "$CODEBLOCK"
           gh issue edit ${{ github.event.issue.number }} --add-assignee ${{ vars.DEVELOPER }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
