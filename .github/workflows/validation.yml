@@ -42,11 +42,11 @@ jobs:
           # fi
           blocking_issues="$(gh issue list --search "label:attention,failure" --json number)"
           echo "blocking issues: $blocking_issues"
-          formatted_blocking_issues="$(gh issue list --search "label:attention,failure" --json number --jq '- .[].number')"
+          formatted_blocking_issues="$(gh issue list --search "label:attention,failure" --json number --jq '- #\(.[].number)')"
           echo -e "here is maybe a formatted list:\n${formatted_blocking_issues}"
           no_issues="$(gh issue list --label 'bug' --json number)"
           echo "no issues: $no_issues"
-          formatted_no_issues="$(gh issue list --label 'bug' --json number --jq '- .[].number')"
+          formatted_no_issues="$(gh issue list --label 'bug' --json number --jq '- #\(.[].number)')"
           echo "formatted no issues: $formatted_no_issues"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
